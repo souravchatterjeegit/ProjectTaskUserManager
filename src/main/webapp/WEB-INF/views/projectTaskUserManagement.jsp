@@ -218,22 +218,33 @@
                 $scope.resetUserForm();
             }
             $scope.userSubmitted = function () {
+            	$scope.alertmessageUser = "";
                 if ($scope.updateAddUserTest == "Add User") {
-                	var req={
-                		contentType: "application/json; charset=utf-8",//required
-                		method: 'POST',
-                		url: '/ProjectTaskUserManager/addUpdateUser',
-                		dataType: "json",//optional
-                		data: { "userId": 0 ,"firstName": $scope.firstName, "lastName": $scope.lastName, "empId": $scope.empID}
+                	var userFound = false;
+                	for(var i=0; i<$scope.users.length; i++){
+                		if ($scope.users[i]["empId"] == $scope.empID) {
+                			$scope.alertmessageUser = "The empid '" + $scope.empID + "'is already taken, please choose a different employee id";
+                			userFound = true;
+                			break;
+                		}
                 	}
-                	$http(req).then(function(response){
-                		var alertString = "User " + $scope.firstName + " " + $scope.lastName + " is successfully created ";
-                    	$scope.resetUserForm();
-                    	$scope.alertmessageUser = alertString;
-                    	$scope.users = response.data;
-                	}, function(){
-                		$scope.alertmessageUser = "task creation error ";
-                	});
+                	if(userFound == false){
+	                	var req={
+	                		contentType: "application/json; charset=utf-8",//required
+	                		method: 'POST',
+	                		url: '/ProjectTaskUserManager/addUpdateUser',
+	                		dataType: "json",//optional
+	                		data: { "userId": 0 ,"firstName": $scope.firstName, "lastName": $scope.lastName, "empId": $scope.empID}
+	                	}
+	                	$http(req).then(function(response){
+	                		var alertString = "User " + $scope.firstName + " " + $scope.lastName + " is successfully created ";
+	                    	$scope.resetUserForm();
+	                    	$scope.alertmessageUser = alertString;
+	                    	$scope.users = response.data;
+	                	}, function(){
+	                		$scope.alertmessageUser = "task creation error ";
+	                	});
+	                }
                 } else if ($scope.updateAddUserTest == "Update User") { /* need to get userid */
                 	var req={
                 		contentType: "application/json; charset=utf-8",//required
@@ -291,6 +302,14 @@
                     	$scope.resetUserForm();
                     	$scope.alertmessageUser = alertString;
                     	$scope.users = response.data;
+                    	$http.get("/ProjectTaskUserManager/getTasks")
+		  					.then(function(response1) {
+		      				$scope.tasks = response1.data;            
+		  				});
+		  				$http.get("/ProjectTaskUserManager/getProjects")
+		  					.then(function(response2) {
+		      				$scope.projects = response2.data;            
+		  				});
                 	}, function(){
                 		$scope.alertmessageUser = "task creation error ";
                 	});
@@ -399,6 +418,10 @@
                     	$scope.resetProjectForm();
                     	$scope.alertmessageProject = alertString;
                     	$scope.projects = response.data;
+                    	$http.get("/ProjectTaskUserManager/getTasks")
+		  					.then(function(response1) {
+		      				$scope.tasks = response1.data;            
+		  				});
                 	}, function(){
                 		$scope.alertmessageProject = "task creation error ";
                 	});
@@ -618,8 +641,8 @@
                             <td class="col-xs-1">{{task.empId}}</td>
                             <td class="col-xs-1">{{task.ended}}</td>
                             <td class="col-xs-2">
-                                <button class="btn btn-primary" ng-click="updateTask(task.taskId)" ng-disabled="task.ended">Update</button>
-                                <button class="btn btn-danger" ng-click="endTask(task.taskId)" ng-disabled="task.ended" title="End the task">End Task</button>
+                                <button class="btn btn-primary" ng-click="updateTask(task.taskId)" ng-disabled="task.taskended">Update</button>
+                                <button class="btn btn-danger" ng-click="endTask(task.taskId)" ng-disabled="task.taskended" title="End the task">End Task</button>
                             </td>
                         </tr>
                     </tbody>
@@ -817,8 +840,8 @@
                             <td class="col-xs-1">{{project.priority}}</td>
                             <td class="col-xs-1">{{project.projectEnded}}</td>
                             <td class="col-xs-2">
-                                <button class="btn btn-primary" ng-click="updateProject(project.projectId)" ng-disabled="project.projectEnded">Update</button>
-                                <button class="btn btn-danger" ng-click="suspendProject(project.projectId)" ng-disabled="project.projectEnded">Suspend</button>
+                                <button class="btn btn-primary" ng-click="updateProject(project.projectId)" ng-disabled="project.ended">Update</button>
+                                <button class="btn btn-danger" ng-click="suspendProject(project.projectId)" ng-disabled="project.ended">Suspend</button>
                             </td>
                         </tr>
                     </tbody>
