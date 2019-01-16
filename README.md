@@ -50,17 +50,11 @@ truncate ProjectParentTask;
 truncate ProjectUser;
 
 1.For Front End –zipped application
-
 2.For Backend -Packaged code files (Source code and WAR).
-
 3.For SCM* –Project Code should be present in active GIT repository
-
 4.Few Steps on how to run the solution.
-
 5.Regular Build Reports from CI server
-
 6.Emma coverage reports
-
 7.Load test reports
 
 *SCM –Source Code Management
