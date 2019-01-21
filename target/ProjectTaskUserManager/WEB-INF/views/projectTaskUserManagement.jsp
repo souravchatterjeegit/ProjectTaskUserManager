@@ -183,7 +183,14 @@
             };
             $scope.endTask = function (taskID) {
                 $scope.alertMessageTask = "";
-                var intention = confirm("Are you sure you want to end the task?");
+                $scope.alertMessageTask = "";
+                $('#exampleModalHeader').html("End Task");
+                $('#exampleModalBody').html("Are you sure you want to end the task?");
+                $scope.yesNoModalOperationType = "task_ended";
+                $scope.yesNoModalOperationId = taskID;
+                $('#exampleModalLong').modal('show');
+                
+                /*var intention = confirm("Are you sure you want to end the task?");
                 if(intention == true){
                 	var req={
                 		contentType: "application/json; charset=utf-8",//required
@@ -199,8 +206,36 @@
                 	});
                 }else{
                     ;
-                }   
+                }*/  
             };
+            $scope.openProjectPopup = function(pageName){
+                $scope.projectPopupOpenedFrom = pageName;
+                $('#exampleModalProjectList').modal('show');
+            }
+            $scope.setProject = function(projectID){
+                if($scope.projectPopupOpenedFrom == 'edit_task'){
+                    $scope.projectForTask = projectID.toString();
+                }else if($scope.projectPopupOpenedFrom == 'view_task'){
+                    $scope.projectForViewTask = projectID.toString();
+                }
+                $('#exampleModalProjectList').modal('hide');
+            }
+            $scope.clearProjectSelection = function(){
+                $scope.projectForTask = 0;
+            }
+            $scope.clearProjectViewSelection = function(){
+                $scope.projectForViewTask = 0;
+            }
+            $scope.openTaskPopup = function(){
+                $('#exampleModalTaskList').modal('show');
+            }
+            $scope.setParentTask = function(taskID){
+                $scope.parentTask = taskID.toString();
+                $('#exampleModalTaskList').modal('hide');
+            }
+            $scope.clearParentTaskSelection = function(){
+                $scope.parentTask = 0;
+            }
             $scope.taskPropertyName = 'taskName';
             $scope.reverse = true;
             $scope.sortTaskBy = function (propertyName) { 
@@ -288,7 +323,15 @@
             }
             $scope.deleteUser = function (userId, empId) {
                 $scope.alertmessageUser = "";
-                var intention = confirm("Are you sure you want to delete the user?");
+                $scope.alertmessageUser = "";
+                $('#exampleModalHeader').html("Delete Employee");
+                $('#exampleModalBody').html("Are you sure you want to delete the employee " + empId + " ?");
+                $scope.yesNoModalOperationType = "delete_employee";
+                $scope.yesNoModalOperationId = userId;
+                $scope.yesNoModalOperationId2 = empId;
+                $('#exampleModalLong').modal('show');
+                
+                /*var intention = confirm("Are you sure you want to delete the user?");
                 if(intention == true){
                 	var req={
                 		contentType: "application/json; charset=utf-8",//required
@@ -315,7 +358,7 @@
                 	});
                 }else{
                     ;
-                }   
+                }*/  
             }
             $scope.UserPropertyName = 'firstName';
             $scope.reverse = true;
@@ -388,6 +431,23 @@
                 $scope.projectManager = 0;
                 $scope.projectToBeUpdated = 0;
             };
+            $scope.openManagerPopup = function (fromPage) {
+                $scope.pageToSetManagerId = fromPage;
+                $('#exampleModalManagerList').modal('show');
+            };
+            $scope.setManager = function (empId) {
+                if ($scope.pageToSetManagerId == 'from_project')
+                    $scope.projectManager = empId.toString();
+                else if ($scope.pageToSetManagerId == 'from_task')
+                    $scope.taskManager = empId.toString();
+                $('#exampleModalManagerList').modal('hide');
+            };
+            $scope.clearManagerSelection = function () {
+                $scope.projectManager = 0;
+            };
+            $scope.clearTaskManagerSelection = function () {
+                $scope.taskManager = 0;
+            };
             $scope.updateProject = function (projectId) {
                 $scope.alertmessageProject = "";
                 for (var i = 0; i < $scope.projects.length; i++) {
@@ -397,14 +457,21 @@
                         $scope.projectStartDate = $scope.projects[i]["startDate"];
                         $scope.projectEndDate = $scope.projects[i]["endDate"];
                         $scope.projectPriority = $scope.projects[i]["priority"];
-                        $scope.projectManager = $scope.projects[i]["empId"];
+                        $scope.projectManager = $scope.projects[i]["empId"].toString();
                         $scope.updateProjectTest = "Update Project";
                         break;
                     }
                 }
             };
             $scope.suspendProject = function (projectId) {
-                var intention = confirm("Are you sure you want to suspend the project?");
+            	$scope.alertmessageProject = "";
+                $('#exampleModalHeader').html("Suspend Project");
+                $('#exampleModalBody').html("Are you sure you want to suspend the project?");
+                $scope.yesNoModalOperationType = "project_suspend";
+                $scope.yesNoModalOperationId = projectId;
+                $('#exampleModalLong').modal('show');
+                
+                /*var intention = confirm("Are you sure you want to suspend the project?");
                 if(intention == true){
                 	var req={
                 		contentType: "application/json; charset=utf-8",//required
@@ -427,7 +494,7 @@
                 	});
                 }else{
                     ;
-                }     
+                }*/     
             };
             $scope.projectToBeUpdated = 0;
             $scope.projectPropertyName = 'projectName';
@@ -437,6 +504,76 @@
                 $scope.projectPropertyName = propertyName;
             };
             /* project operations - END */
+            
+            /* modal manipulation - BEGIN */
+            $scope.yesNoModalOperationType = "";
+            $scope.yesNoModalOperationId = "";
+            $scope.yesNoModalOperationId2 = "";
+            $scope.yesClickedInModal = function () {
+                if ($scope.yesNoModalOperationType == "project_suspend") {
+                    var req={
+                		contentType: "application/json; charset=utf-8",//required
+                		method: 'POST',
+                		url: '/ProjectTaskUserManager/suspendProject',
+                		dataType: "json",//optional
+                		data: { "projectId": $scope.yesNoModalOperationId }
+                	}
+                	$http(req).then(function(response){
+                		var alertString = "Project is successfully suspended ";
+                    	$scope.resetProjectForm();
+                    	$scope.alertmessageProject = alertString;
+                    	$scope.projects = response.data;
+                    	$http.get("/ProjectTaskUserManager/getTasks")
+		  					.then(function(response1) {
+		      				$scope.tasks = response1.data;            
+		  				});
+                	}, function(){
+                		$scope.alertmessageProject = "Error in project operation ";
+                	});
+                } else if ($scope.yesNoModalOperationType == "delete_employee") {
+                    var req={
+                		contentType: "application/json; charset=utf-8",//required
+                		method: 'POST',
+                		url: '/ProjectTaskUserManager/deleteUser',
+                		dataType: "json",//optional
+                		data: { "userId": $scope.yesNoModalOperationId, "empId": $scope.yesNoModalOperationId2 }
+                	}
+                	$http(req).then(function(response){
+                		var alertString = "User is successfully deleted ";
+                    	$scope.resetUserForm();
+                    	$scope.alertmessageUser = alertString;
+                    	$scope.users = response.data;
+                    	$http.get("/ProjectTaskUserManager/getTasks")
+		  					.then(function(response1) {
+		      				$scope.tasks = response1.data;            
+		  				});
+		  				$http.get("/ProjectTaskUserManager/getProjects")
+		  					.then(function(response2) {
+		      				$scope.projects = response2.data;            
+		  				});
+                	}, function(){
+                		$scope.alertmessageUser = "Error in user operation ";
+                	});
+                } else if ($scope.yesNoModalOperationType == "task_ended") {
+                    var req={
+                		contentType: "application/json; charset=utf-8",//required
+                		method: 'POST',
+                		url: '/ProjectTaskUserManager/endTask',
+                		dataType: "json",
+                		data: { "taskId": $scope.yesNoModalOperationId }
+                	}
+                	$http(req).then(function(response){
+                		$scope.tasks = response.data;
+                	}, function(){
+                		$scope.alertMessageTask = "Error in task operation ";
+                	});
+                }
+                $scope.yesNoModalOperationType = "";
+                $scope.yesNoModalOperationId = "";
+                $scope.yesNoModalOperationId2 = "";
+                $('#exampleModalLong').modal('hide');
+            }
+            /* modal manipulation - END */
         })
     </script>
 
@@ -471,6 +608,12 @@
     </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
         crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
 </head>
 <body ng-app="taskApp" ng-controller="taskController">
     <div class="row form-group"></div>
@@ -483,6 +626,110 @@
         </div>
     </div>
     <div class="row justify-content-center form-group">
+    	<!-- Modal -->
+        <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalHeader"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="exampleModalBody">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">NO</button>
+                        <button type="button" class="btn btn-danger" ng-click="yesClickedInModal()">YES</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal for manager list -->
+        <div class="modal fade" id="exampleModalManagerList" tabindex="-1" role="dialog" aria-labelledby="exampleModalManagerListTitle"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalManagerListHeader">Select Manager/User</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="exampleModalManagerListBody">
+                        <div class="row form-group">
+                            <label class="col-md-3 control-lable" style="text-align:right" for="searchUser">Search:</label>
+                            <div class="col-md-8">
+                                <input type="text" name="searchUserInPopup" ng-model="searchUserInPopup" class="input-sm"></input>
+                            </div>
+                        </div>
+                        <table class='table table-bordered'>
+                            <tr ng-repeat="user in users | filter:searchUserInPopup">
+                                <td class="col-xs-5">
+                                    <button class="btn btn-link" ng-click="setManager(user.empId)">{{user.empId}}</button>
+                                </td>
+                                <td class="col-xs-5">{{user.firstName}} {{user.lastName}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal for project list -->
+        <div class="modal fade" id="exampleModalProjectList" tabindex="-1" role="dialog" aria-labelledby="exampleModalProjectListTitle"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalProjectListHeader">Select Project</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="exampleModalProjectListBody">
+                        <div class="row form-group">
+                            <label class="col-md-3 control-lable" style="text-align:right" for="searchUser">Search:</label>
+                            <div class="col-md-8">
+                                <input type="text" name="searchProjectInPopup" ng-model="searchProjectInPopup" class="input-sm"></input>
+                            </div>
+                        </div>
+                        <table class='table table-bordered'>
+                            <tr ng-repeat="project in projects | filter:searchProjectInPopup">
+                                <td class="col-xs-5">
+                                    <button class="btn btn-link" ng-click="setProject(project.projectId)">{{project.projectName}}</button>
+                                </td>
+                                <td class="col-xs-5">{{project.startDate}} - {{project.endDate}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal for Task list -->
+        <div class="modal fade" id="exampleModalTaskList" tabindex="-1" role="dialog" aria-labelledby="exampleModalTaskListTitle"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalTaskListHeader">Select Parent Task</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="exampleModalTaskListBody">
+                        <table class='table table-bordered'>
+                            <tr ng-repeat="task in tasks|filter:parentTaskFilter">
+                                <td class="col-xs-5">
+                                    <button class="btn btn-link" ng-click="setParentTask(task.taskId)">{{task.taskName}}</button>
+                                </td>
+                                <td class="col-xs-5">{{task.startDate}} - {{task.endDate}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- This is for add/edit tasks page -->
         <div class="col-md-8 col-sm-8 col-xs-8 col-xs-offset-2 col-md-offset-2 col-sm-offset-2 bg-white border rounded" ng-show="showAddEditPage">
             <form name="taskForm" novalidate>
@@ -497,13 +744,15 @@
                 <div class="row form-group">
                     <label class="col-md-3 control-lable" style="text-align:right" for="projectForTask">Project name:</label>
                     <div class="col-md-8">
-                        <select id="projectForTask" name="projectForTask" ng-model="projectForTask">
+                        <select id="projectForTask" name="projectForTask" ng-model="projectForTask"  ng-disabled="true">
                             <option value=""></option>
                             <option ng-repeat="project in projects" value="{{project.projectId}}">{{project.projectName}}</option>
                         </select>
                         <span style="color:red" ng-show="!projectForTask">
                             Please select a project first
                         </span>
+                        <button class="btn btn-success" ng-click="openProjectPopup('edit_task')">Select Project</button>
+                        <button class="btn btn-danger" ng-click="clearProjectSelection()">Clear</button>
                     </div>
                 </div>
                 <div class="row form-group">
@@ -528,10 +777,12 @@
                 <div class="row form-group">
                     <label class="col-md-3 control-lable" style="text-align:right" for="parentTask">Parent Task:</label>
                     <div class="col-md-8">
-                        <select id="parentTask" name="parentTask" ng-model="parentTask" ng-disabled="!projectForTask">
+                        <select id="parentTask" name="parentTask" ng-model="parentTask" ng-disabled="true">
                             <option value=""></option>
                             <option ng-repeat="task in tasks|filter:parentTaskFilter" value="{{task.taskId}}">{{task.taskName}}</option>
                         </select>
+                        <button class="btn btn-success" ng-click="openTaskPopup()" ng-disabled="!projectForTask">Select Parent</button>
+                        <button class="btn btn-danger" ng-click="clearParentTaskSelection()">Clear</button>
                     </div>
                 </div>
                 <div class="row form-group">
@@ -561,10 +812,12 @@
                 <div class="row form-group">
                     <label class="col-md-3 control-lable" style="text-align:right" for="taskManager">User:</label>
                     <div class="col-md-8">
-                        <select id="taskManager" name="taskManager" ng-model="taskManager" ng-disabled="!projectForTask">
+                        <select id="taskManager" name="taskManager" ng-model="taskManager" ng-disabled="true">
                             <option value="0"></option>
                             <option ng-repeat="user in users" value="{{user.empId}}">{{user.empId}} - {{user.firstName}} {{user.lastName}}</option>
                         </select>
+                        <button class="btn btn-success" ng-click="openManagerPopup('from_task')">Select Manager</button>
+                        <button class="btn btn-danger" ng-click="clearTaskManagerSelection()">Clear</button>
                     </div>
                 </div>
                 <hr/>
@@ -587,13 +840,15 @@
                 <div class="row form-group">
                     <label class="col-md-3 control-lable" style="text-align:right" for="projectForViewTask">Project name:</label>
                     <div class="col-md-8">
-                        <select id="projectForViewTask" name="projectForViewTask" ng-model="projectForViewTask">
+                        <select id="projectForViewTask" name="projectForViewTask" ng-model="projectForViewTask" ng-disabled="true">
                             <option value=""></option>
                             <option ng-repeat="project in projects" value="{{project.projectId}}">{{project.projectName}}</option>
                         </select>
                         <span style="color:red" ng-show="!projectForViewTask">
                             Please select a project first
                         </span>
+                        <button class="btn btn-success" ng-click="openProjectPopup('view_task')">Select Project</button>
+                    	<button class="btn btn-danger" ng-click="clearProjectViewSelection()">Clear</button>
                     </div>
                 </div>
                 <hr/>
@@ -639,7 +894,7 @@
                             <td class="col-xs-1">{{task.endDate}}</td>
                             <td class="col-xs-2">{{task.parentTask}}</td>
                             <td class="col-xs-1">{{task.empId}}</td>
-                            <td class="col-xs-1">{{task.ended}}</td>
+                            <td class="col-xs-1">{{task.taskended}}</td>
                             <td class="col-xs-2">
                                 <button class="btn btn-primary" ng-click="updateTask(task.taskId)" ng-disabled="task.taskended">Update</button>
                                 <button class="btn btn-danger" ng-click="endTask(task.taskId)" ng-disabled="task.taskended" title="End the task">End Task</button>
@@ -784,10 +1039,12 @@
                 <div class="row form-group">
                     <label class="col-md-3 control-lable" style="text-align:right" for="projectManager">Manager:</label>
                     <div class="col-md-8">
-                        <select id="projectManager" name="projectManager" ng-model="projectManager">
+                        <select id="projectManager" name="projectManager" ng-model="projectManager" ng-disabled="true">
                             <option value="0"></option>
                             <option ng-repeat="user in users" value="{{user.empId}}">{{user.empId}} - {{user.firstName}} {{user.lastName}}</option>
                         </select>
+                        <button class="btn btn-success" ng-click="openManagerPopup('from_project')">Select Manager</button>
+                        <button class="btn btn-danger" ng-click="clearManagerSelection()">Clear</button>
                     </div>
                 </div>
                 <hr/>
@@ -838,7 +1095,7 @@
                             <td class="col-xs-2">{{project.startDate}}</td>
                             <td class="col-xs-2">{{project.endDate}}</td>
                             <td class="col-xs-1">{{project.priority}}</td>
-                            <td class="col-xs-1">{{project.projectEnded}}</td>
+                            <td class="col-xs-1">{{project.ended}}</td>
                             <td class="col-xs-2">
                                 <button class="btn btn-primary" ng-click="updateProject(project.projectId)" ng-disabled="project.ended">Update</button>
                                 <button class="btn btn-danger" ng-click="suspendProject(project.projectId)" ng-disabled="project.ended">Suspend</button>
